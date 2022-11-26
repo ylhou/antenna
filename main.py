@@ -71,7 +71,7 @@ def set_timeline(cfg):
         matters = cfg["matters"]
         for item in matters:
             if item.get("repeat_at"):
-                if T[item["category"]] in item["repeat_at"]:
+                if T[item["category"]] not in item["repeat_at"]:
                     continue
             tl = [date_to_stamp(tp) for tp in item["start_at"]]
             schedule(tl, {
@@ -87,6 +87,9 @@ def set_timeline(cfg):
             else:
                 # 二级页面
                 for item in page["subpage"]:
+                    if item.get("repeat_at"):
+                        if T[item["category"]] not in item["repeat_at"]:
+                            continue
                     if item.get("end_at"):
                         tp = date_to_stamp(item["start_at"])
                         end = date_to_stamp(item["end_at"])
@@ -190,6 +193,7 @@ if __name__ == '__main__':
 
         for n in notice_list:
             messages.append(n["msg"])
-        messager.send("「" + "」「".join(messages) + "」")
+        if len(messages) > 0:
+            messager.send("「" + "」「".join(messages) + "」")
 
     sys.exit()
