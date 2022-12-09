@@ -19,7 +19,7 @@ class Msger:
                      urllib.parse.urlencode({
                          "token": self.token,
                          "user": self.key,
-                         "message": msg,
+                         "message": msg
                      }), {"Content-type": "application/x-www-form-urlencoded"})
         conn.getresponse()
 

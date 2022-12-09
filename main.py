@@ -6,7 +6,7 @@
 :Create:  2022/11/15 22:58
 Copyright (c) 2018, Lianjia Group All Rights Reserved.
 """
-import json
+import os
 import yaml
 import sys
 import argparse
@@ -20,26 +20,22 @@ from src.parser import Parser
 from src.messager import Msger
 
 
-t0 = datetime.fromtimestamp(time.time())
-T = {
-    "DAYOFMONTH": t0.day,
-    "WEEKDAY": t0.weekday(),
-    "MONTHOFYEAR": t0.month,
-    "DATE": t0.strftime("%Y-%m-%d")
-}
-
+def stamp_to_struct(seconds):
+    t = datetime.fromtimestamp(seconds)
+    return {
+        "DAYOFMONTH": t.day,
+        "WEEKDAY": t.weekday(),
+        "MONTHOFYEAR": t.month,
+        "DATE": t.strftime("%Y-%m-%d")
+    }
 
 def date_to_stamp(hm):
     d = "%s %s" % (T["DATE"], hm)
     return floor(datetime.strptime(d, "%Y-%m-%d %H:%M").timestamp())
 
 
-def load_config(mode):
-    if mode == 1:
-        filepath = "user_config.yml"
-    else:
-        filepath = "/cfg/user_config.yml"
-    with open(filepath, 'r', encoding='utf-8') as file:
+def load_config(path):
+    with open(path, 'r', encoding='utf-8') as file:
         uc = yaml.safe_load(file)
     return uc
 
@@ -154,11 +150,24 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--mode', required=True, type=int, help='运行模式（1.shell/2.docker）')
     parser.add_argument('-u', '--url', required=False, type=str, help='shell模式下本地爬虫链接')
     args = parser.parse_args()
-
-    user_config = load_config(args.mode)
+    global T
+    T = stamp_to_struct(time.time())
+    filepath = "user_config.yml"
+    if args.mode == 2:
+        filepath = "/cfg/user_config.yml"
+    user_config = load_config(filepath)
     time_line, todolist = set_timeline(user_config)
     messager = Msger(user_config["pushover"]["api_token"], user_config["pushover"]["usr_key"])
+    just_now = time_line[0]
     while len(time_line) > 0:
+        # 是否更新了配置文件
+        cfg_msec = floor(os.path.getmtime(filepath))
+        cfg_mtime = stamp_to_struct(cfg_msec)
+        if cfg_mtime["DATE"] == T["DATE"] and cfg_msec > just_now:
+            user_config = load_config(filepath)
+            time_line, todolist = set_timeline(user_config)
+            just_now = cfg_msec
+            continue
         now = floor(time.time())
         coming = time_line[0]
         if now > coming:
@@ -169,7 +178,7 @@ if __name__ == '__main__':
             continue
         interval = time_line[0] - now
         time_line.pop(0)
-
+        # 做一轮任务
         coro_list = []
         notice_list = []
         messages = []
@@ -195,5 +204,6 @@ if __name__ == '__main__':
             messages.append(n["msg"])
         if len(messages) > 0:
             messager.send("「" + "」「".join(messages) + "」")
+        just_now = now
 
     sys.exit()
