@@ -76,7 +76,8 @@ def set_timeline(cfg):
 
     if cfg.get("sniffers"):
         for page in cfg["sniffers"]:
-            cookies = set_cookies(page["cookies"])
+            # cookies = set_cookies(page["cookies"])
+            cookies = page["cookies"]
             if page.get("start_at"):
                 # 一级页面
                 pass
@@ -107,7 +108,9 @@ def set_timeline(cfg):
 
 
 async def fetch(url, cookies):
-    async with aiohttp.ClientSession(cookies=cookies) as session:
+    async with aiohttp.ClientSession(headers={
+        "cookie": cookies
+    }) as session:
         async with session.get(url) as res:
             text = await res.text()
             return text
