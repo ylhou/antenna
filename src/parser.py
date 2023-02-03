@@ -30,6 +30,21 @@ class Parser(object):
                 return {"msg": "猫笔刀(bad resp)", "id": self.id}
         if self.id == 'P201':
             pass
+        if self.id == 'P301':
+            resp = json.loads(text)
+            if resp["message"] == 'OK':
+                data = resp["data"]
+                msg = []
+                if data.get('items') and len(data['items']) > 0:
+                    for item in data['items']:
+                        if int(item["display_time"]) > int(time.time()-60*60*24):
+                            msg.append(item["content_text"])
+                return {"msg": "/".join(msg), "id": self.id}
+            else:
+                return {"msg": "华尔街(bad resp)", "id": self.id}
+
+
+
 
 
 if __name__ == '__main__':

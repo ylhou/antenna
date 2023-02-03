@@ -192,7 +192,8 @@ if __name__ == '__main__':
                 notice_list.append(evt)
         coro_results = asyncio.run(workflow(interval, coro_list))
         for c in coro_results:
-            messages.append(c["msg"])
+            if len(c["msg"]) > 0:
+                messages.append(c["msg"])
             for tp in list(time_line):
                 for evt in list(todolist[tp]):
                     if evt.get("id"):
