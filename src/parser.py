@@ -35,9 +35,14 @@ class Parser(object):
             if resp["message"] == 'OK':
                 data = resp["data"]
                 msg = []
+                titles = []
                 if data.get('items') and len(data['items']) > 0:
                     for item in data['items']:
                         if int(item["display_time"]) > int(time.time()-60*60*24):
+                            title = item["title"]
+                            if title in titles:
+                                continue
+                            titles.append(title)
                             msg.append(item["content_text"])
                 return {"msg": "/".join(msg), "id": self.id}
             else:
