@@ -42,6 +42,8 @@ class Parser(object):
                             title = item["title"]
                             if title in titles:
                                 continue
+                            if  title.strip() == '':
+                                continue
                             titles.append(title)
                             msg.append(item["content_text"])
                 return {"msg": "/".join(msg), "id": self.id}
